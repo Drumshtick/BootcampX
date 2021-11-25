@@ -8,20 +8,23 @@ const pool = new Pool({
   database: 'bootcampx'
 });
 
-const cohort = process.argv.splice(2,1);
+const cohortName = process.argv[2];
+// Store all potentially malicious values in an array.
+const values = [`%${cohortName}%`];
 
-pool.query(`
+const queryString = `
 SELECT DISTINCT  teachers.name as teacher, cohorts.name as cohort
 FROM teachers
 JOIN assistance_requests ON assistance_requests.teacher_id = teachers.id
 JOIN students ON students.id = assistance_requests.student_id
 JOIN cohorts ON cohorts.id = students.cohort_id
-WHERE cohorts.name = '${cohort}'
-ORDER BY teacher;
-`)
+WHERE cohorts.name = '$1%'
+ORDER BY teacher
+  `;
+
+pool.query(queryString, values)
 .then(res => {
-  console.log('connected');
-  res.rows.forEach(HTMLTableRowElement => {
-    console.log(`${cohort}: ${row.teacher}`);
+  res.rows.forEach(user => {
+    console.log(`${user.name} has an id of ${user.id} and was in the ${user.cohort} cohort`);
   })
 });
